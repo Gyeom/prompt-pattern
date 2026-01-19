@@ -9,14 +9,15 @@
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const { loadConfig, getDataDir } = require('./config.js');
 
-// 설정
-const DATA_DIR = path.join(os.homedir(), '.prompt-pattern');
+// 설정 로드
+const config = loadConfig();
+const DATA_DIR = getDataDir();
 const PROMPTS_FILE = path.join(DATA_DIR, 'prompts.json');
-const SIMILARITY_THRESHOLD = 0.25;  // 25% 이상 유사하면 같은 패턴 (한국어 형태소 고려)
-const MIN_PATTERN_COUNT = 3;        // 최소 3번 반복해야 패턴
-const DAYS_TO_ANALYZE = 14;         // 최근 14일 분석
+const SIMILARITY_THRESHOLD = config.similarityThreshold;
+const MIN_PATTERN_COUNT = config.minPatternCount;
+const DAYS_TO_ANALYZE = config.daysToAnalyze;
 
 /**
  * 메인 분석 함수

@@ -9,16 +9,17 @@
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const { loadConfig, getDataDir } = require('./config.js');
 
-const DATA_DIR = path.join(os.homedir(), '.prompt-pattern');
+// 설정 로드
+const config = loadConfig();
+const DATA_DIR = getDataDir();
 const PROMPTS_FILE = path.join(DATA_DIR, 'prompts.json');
 const LAST_SUGGEST_FILE = path.join(DATA_DIR, 'last-suggest.json');
 
-// 설정
-const MIN_PROMPTS_BEFORE_SUGGEST = 5;   // 최소 5개 프롬프트 후 제안
-const SUGGEST_COOLDOWN_HOURS = 24;      // 24시간에 한 번만 제안
-const MIN_PATTERN_COUNT = 3;
+const MIN_PROMPTS_BEFORE_SUGGEST = config.minPromptsBeforeSuggest;
+const SUGGEST_COOLDOWN_HOURS = config.suggestCooldownHours;
+const MIN_PATTERN_COUNT = config.minPatternCount;
 
 // analyze-patterns.js 모듈 사용
 const { analyzePatterns } = require('./analyze-patterns.js');

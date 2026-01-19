@@ -9,11 +9,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const { loadConfig, getDataDir } = require('./config.js');
 
-// 데이터 저장 경로
-const DATA_DIR = path.join(os.homedir(), '.prompt-pattern');
+// 설정 로드
+const config = loadConfig();
+const DATA_DIR = getDataDir();
 const PROMPTS_FILE = path.join(DATA_DIR, 'prompts.json');
+const MAX_PROMPTS = config.maxStoredPrompts;
 
 // 데이터 디렉토리 생성
 if (!fs.existsSync(DATA_DIR)) {
@@ -72,9 +74,9 @@ process.stdin.on('end', () => {
       tokens: tokenize(prompt)
     });
 
-    // 최대 1000개 유지 (오래된 것 삭제)
-    if (data.prompts.length > 1000) {
-      data.prompts = data.prompts.slice(-1000);
+    // 최대 개수 유지 (오래된 것 삭제)
+    if (data.prompts.length > MAX_PROMPTS) {
+      data.prompts = data.prompts.slice(-MAX_PROMPTS);
     }
 
     // 저장

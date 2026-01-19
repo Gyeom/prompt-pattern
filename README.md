@@ -1,169 +1,169 @@
 # Prompt Pattern Plugin
 
-> 반복 프롬프트를 감지하고 자동화를 제안하는 Claude Code 플러그인
+[한국어](README.ko.md)
 
-## 소개
+> Detect repeated prompts and suggest automation for Claude Code
 
-Claude Code를 사용하다 보면 비슷한 요청을 반복하게 된다:
-- "변경사항 커밋해줘"
-- "테스트 돌려줘"
-- "빌드하고 에러 확인해"
+## Introduction
 
-**Prompt Pattern**은 이런 반복을 감지하고, Skill로 자동화할 수 있게 도와준다.
+When using Claude Code, you often repeat similar requests:
+- "Commit the changes"
+- "Run the tests"
+- "Build and check for errors"
+
+**Prompt Pattern** detects these repetitions and helps you automate them as Skills.
 
 ```
-💡 "커밋 관련 요청"을 12회 하셨네요!
-   /commit 으로 만들면 더 빠르게 사용할 수 있어요.
+💡 You've made "commit-related requests" 12 times!
+   Create /commit to use it faster.
 ```
 
-## 설치
+## Installation
 
 ```bash
-claude /plugin install prompt-pattern
+claude plugin add github:Gyeom/prompt-pattern
 ```
 
-또는 GitHub에서 직접:
+## Usage
 
-```bash
-claude /plugin install github:your-username/prompt-pattern
-```
+### Automatic Detection
 
-## 사용법
+After installation, you don't need to do anything. The plugin automatically:
 
-### 자동 감지
+1. Silently collects all prompts
+2. Analyzes repetition patterns
+3. Suggests at session start (once per day)
 
-설치 후 아무것도 하지 않아도 된다. 플러그인이 자동으로:
+### /patterns Command
 
-1. 모든 프롬프트를 조용히 수집
-2. 반복 패턴 분석
-3. 세션 시작 시 제안 (하루 1회)
-
-### /patterns 명령어
-
-직접 패턴을 확인하고 싶다면:
+To check patterns manually:
 
 ```
 You: /patterns
 
 Claude:
-🔍 반복 프롬프트 패턴 (최근 14일)
+🔍 Repeated Prompt Patterns (last 14 days)
 
-1. "커밋 관련 요청" - 12회
-   예시: "변경사항 커밋해줘", "커밋 메시지 작성하고..."
-   💡 /commit 으로 Skill 만들기?
+1. "Commit-related requests" - 12 times
+   Examples: "commit the changes", "write commit message..."
+   💡 Create as /commit Skill?
 
-2. "테스트 실행 요청" - 8회
-   예시: "테스트 돌려줘", "npm test 실행해"
-   💡 /test 로 Skill 만들기?
+2. "Test execution requests" - 8 times
+   Examples: "run tests", "execute npm test"
+   💡 Create as /test Skill?
 
-어떤 패턴을 Skill로 만들까요?
+Which pattern would you like to make into a Skill?
 
-You: 1번 만들어줘
+You: Make #1
 
-Claude: ✅ /commit Skill이 생성되었습니다!
-        📍 위치: .claude/skills/commit.md
-        🚀 사용법: /commit
+Claude: ✅ /commit Skill has been created!
+        📍 Location: .claude/skills/commit.md
+        🚀 Usage: /commit
 ```
 
-### 제안 무시하기
+### Dismissing Suggestions
 
-관심 없는 패턴은 무시할 수 있다:
+You can dismiss patterns you're not interested in:
 
 ```
-You: 테스트 패턴은 관심없어
+You: I'm not interested in the test pattern
 
-Claude: 알겠습니다! 이 패턴은 더 이상 제안하지 않을게요.
+Claude: Got it! I won't suggest this pattern anymore.
 ```
 
-## 작동 원리
+## How It Works
 
-### 데이터 수집
+### Data Collection
 
-- **UserPromptSubmit Hook**: 모든 프롬프트를 캡처
-- 저장 위치: `~/.prompt-pattern/prompts.json`
-- 최대 1000개 유지 (오래된 것 자동 삭제)
-- 슬래시 명령어(`/xxx`)는 저장하지 않음
+- **UserPromptSubmit Hook**: Captures all prompts
+- Storage: `~/.prompt-pattern/prompts.json`
+- Keeps max 1000 entries (auto-deletes old ones)
+- Slash commands (`/xxx`) are not stored
 
-### 패턴 분석
+### Pattern Analysis
 
-- **Jaccard 유사도**: 토큰 기반 유사도 계산
-- 40% 이상 유사하면 같은 패턴으로 그룹화
-- 최소 3회 이상 반복해야 패턴으로 인정
-- 최근 14일 데이터만 분석
+- **Jaccard Similarity**: Token-based similarity calculation
+- Groups as same pattern if 25%+ similar
+- Requires minimum 3 repetitions to be recognized as pattern
+- Only analyzes last 14 days of data
 
-### 제안 타이밍
+### Suggestion Timing
 
-- **SessionStart Hook**: 세션 시작 시 제안
-- 24시간에 1회만 (방해 최소화)
-- 최소 10개 프롬프트 수집 후 제안 시작
+- **SessionStart Hook**: Suggests at session start
+- Once per 24 hours only (minimize interruption)
+- Starts suggesting after collecting minimum 5 prompts
 
-## 파일 구조
+## Configuration
+
+Create `~/.prompt-pattern/config.json` to customize:
+
+```json
+{
+  "similarityThreshold": 0.25,
+  "minPatternCount": 3,
+  "daysToAnalyze": 14,
+  "suggestCooldownHours": 24,
+  "minPromptsBeforeSuggest": 5,
+  "maxStoredPrompts": 1000
+}
+```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `similarityThreshold` | 0.25 | Similarity threshold (25%) |
+| `minPatternCount` | 3 | Minimum repetitions |
+| `daysToAnalyze` | 14 | Analysis period (days) |
+| `suggestCooldownHours` | 24 | Suggestion interval (hours) |
+| `minPromptsBeforeSuggest` | 5 | Min prompts before suggesting |
+| `maxStoredPrompts` | 1000 | Max stored prompts |
+
+## File Structure
 
 ```
 prompt-pattern/
 ├── .claude-plugin/
-│   └── plugin.json           # 플러그인 메타데이터
+│   └── plugin.json           # Plugin metadata
 ├── hooks/
-│   ├── hooks.json            # 훅 설정
+│   ├── hooks.json            # Hook configuration
 │   └── scripts/
-│       ├── capture-prompt.js    # 프롬프트 캡처
-│       ├── analyze-patterns.js  # 패턴 분석
-│       └── suggest-pattern.js   # 세션 시작 제안
+│       ├── capture-prompt.js    # Prompt capture
+│       ├── analyze-patterns.js  # Pattern analysis
+│       └── suggest-pattern.js   # Session start suggestion
 ├── commands/
-│   └── patterns.md           # /patterns 명령어
+│   └── patterns.md           # /patterns command
 ├── skills/
-│   └── create-pattern-skill.md  # Skill 생성 도우미
+│   └── create-pattern-skill.md  # Skill creation helper
 └── README.md
 ```
 
-## 데이터 & 프라이버시
+## Data & Privacy
 
-- 모든 데이터는 **로컬**에만 저장 (`~/.prompt-pattern/`)
-- 외부 서버로 전송하지 않음
-- 언제든 삭제 가능: `rm -rf ~/.prompt-pattern`
+- All data stored **locally** only (`~/.prompt-pattern/`)
+- Never sent to external servers
+- Delete anytime: `rm -rf ~/.prompt-pattern`
 
-## 설정
+## Troubleshooting
 
-현재 버전에서는 하드코딩된 설정을 사용:
+### Patterns not detected
 
-| 설정 | 값 | 설명 |
-|------|------|------|
-| `SIMILARITY_THRESHOLD` | 0.4 | 유사도 임계값 (40%) |
-| `MIN_PATTERN_COUNT` | 3 | 최소 반복 횟수 |
-| `DAYS_TO_ANALYZE` | 14 | 분석 기간 (일) |
-| `SUGGEST_COOLDOWN_HOURS` | 24 | 제안 간격 (시간) |
+- Minimum 5 prompts required
+- Slash commands (`/xxx`) are not collected
+- Check if data exists in `~/.prompt-pattern/prompts.json`
 
-향후 설정 파일 지원 예정.
+### No suggestions appearing
 
-## 문제 해결
+- Suggestions appear once per 24 hours
+- Reset cooldown: `rm ~/.prompt-pattern/last-suggest.json`
 
-### 패턴이 감지되지 않아요
+### Errors occurring
 
-- 최소 10개 프롬프트가 필요합니다
-- 슬래시 명령어(`/xxx`)는 수집되지 않습니다
-- `~/.prompt-pattern/prompts.json`에 데이터가 있는지 확인
+- Check `~/.prompt-pattern/error.log`
+- Report issues: [GitHub Issues](https://github.com/Gyeom/prompt-pattern/issues)
 
-### 제안이 안 나와요
-
-- 24시간에 1회만 제안합니다
-- `rm ~/.prompt-pattern/last-suggest.json`으로 쿨다운 리셋
-
-### 에러가 발생해요
-
-- `~/.prompt-pattern/error.log` 확인
-- 이슈 리포트: [GitHub Issues](https://github.com/your-username/prompt-pattern/issues)
-
-## 로드맵
-
-- [ ] 설정 파일 지원 (`~/.prompt-pattern/config.json`)
-- [ ] 임베딩 기반 유사도 (더 정확한 패턴 감지)
-- [ ] 웹 대시보드
-- [ ] 팀 공유 기능
-
-## 라이선스
+## License
 
 MIT
 
-## 기여
+## Contributing
 
-PR 환영합니다!
+PRs welcome!
