@@ -1,0 +1,11 @@
+{
+  "name": "prompt-pattern-marketplace",
+  "version": "1.0.0",
+  "description": "Marketplace for Prompt Pattern plugin",
+  "plugins": [
+    {
+      "name": "prompt-pattern",
+      "path": ".."
+    }
+  ]
+}
