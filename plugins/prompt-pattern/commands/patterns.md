@@ -8,9 +8,14 @@ description: "감지된 반복 프롬프트 패턴을 확인하고 Skill로 자�
 
 ## 실행 방법
 
-1. 먼저 `node "$CLAUDE_PLUGIN_DIR/hooks/scripts/analyze-patterns.js" --json` 을 실행하여 패턴 분석 결과를 가져옵니다.
+1. `~/.prompt-pattern/prompts.json` 파일을 Read 도구로 읽는다.
 
-2. 결과를 사용자에게 보기 좋게 정리하여 표시합니다.
+2. 프롬프트들을 분석하여 반복 패턴을 찾는다:
+   - 유사한 키워드를 가진 프롬프트들을 그룹화
+   - 3회 이상 반복된 패턴만 표시
+   - 최근 14일 내 데이터만 분석
+
+3. 결과를 사용자에게 보기 좋게 정리하여 표시한다.
 
 ## 출력 형식
 
@@ -75,4 +80,11 @@ description: "{패턴 설명}"
 ## 데이터 위치
 
 - 프롬프트 데이터: `~/.prompt-pattern/prompts.json`
-- 분석 스크립트: `$CLAUDE_PLUGIN_DIR/hooks/scripts/analyze-patterns.js`
+- 설정 파일: `~/.prompt-pattern/config.json`
+
+## 패턴 분석 방법
+
+프롬프트 데이터의 `tokens` 필드를 활용하여 유사도를 계산한다:
+- 동일 토큰이 2개 이상 겹치면 같은 그룹으로 분류
+- 그룹 내 프롬프트가 3개 이상이면 패턴으로 인식
+- 대표 키워드로 패턴 이름을 자동 생성 (예: "커밋" → "commit")
