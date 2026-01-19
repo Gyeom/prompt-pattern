@@ -1,11 +1,8 @@
 {
   "name": "prompt-pattern",
-  "version": "0.1.0",
-  "description": "Detects repeated prompt patterns and suggests automation via Skills",
-  "author": "Gyeom",
-  "homepage": "https://github.com/Gyeom/prompt-pattern",
-  "claude_code_version": ">=1.0.0",
-  "hooks": "hooks/hooks.json",
-  "commands": ["commands/"],
-  "skills": ["skills/"]
+  "description": "Detects repeated prompt patterns and suggests automation via Skills. Supports multiple languages.",
+  "author": {
+    "name": "Gyeom",
+    "email": "rlaeorua369@gmail.com"
+  }
 }
