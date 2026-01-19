@@ -1,11 +1,22 @@
 {
-  "name": "prompt-pattern-marketplace",
-  "version": "1.0.0",
-  "description": "Marketplace for Prompt Pattern plugin",
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "prompt-pattern",
+  "description": "Detect repeated prompts and suggest automation for Claude Code",
+  "owner": {
+    "name": "Gyeom",
+    "email": "rlaeorua369@gmail.com"
+  },
   "plugins": [
     {
       "name": "prompt-pattern",
-      "path": ".."
+      "description": "Detects repeated prompt patterns and suggests automation via Skills. Supports multiple languages.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Gyeom",
+        "email": "rlaeorua369@gmail.com"
+      },
+      "source": "..",
+      "category": "productivity"
     }
   ]
 }
