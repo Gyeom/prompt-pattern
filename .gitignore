@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Data (user-specific, stored in ~/.prompt-pattern/)
+data/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test
+coverage/
+.nyc_output/
