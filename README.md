@@ -21,7 +21,11 @@ When using Claude Code, you often repeat similar requests:
 ## Installation
 
 ```bash
-claude plugin add github:Gyeom/prompt-pattern
+# Add marketplace
+claude plugin marketplace add Gyeom/prompt-pattern
+
+# Install plugin
+claude plugin install prompt-pattern
 ```
 
 ## Usage
@@ -122,18 +126,24 @@ Create `~/.prompt-pattern/config.json` to customize:
 ```
 prompt-pattern/
 ├── .claude-plugin/
-│   └── plugin.json           # Plugin metadata
-├── hooks/
-│   ├── hooks.json            # Hook configuration
-│   └── scripts/
-│       ├── capture-prompt.js    # Prompt capture
-│       ├── analyze-patterns.js  # Pattern analysis
-│       └── suggest-pattern.js   # Session start suggestion
-├── commands/
-│   └── patterns.md           # /patterns command
-├── skills/
-│   └── create-pattern-skill.md  # Skill creation helper
-└── README.md
+│   └── marketplace.json      # Marketplace metadata
+├── plugins/
+│   └── prompt-pattern/
+│       ├── .claude-plugin/
+│       │   └── plugin.json   # Plugin metadata
+│       ├── hooks/
+│       │   ├── hooks.json    # Hook configuration
+│       │   └── scripts/
+│       │       ├── config.js           # Config loader
+│       │       ├── capture-prompt.js   # Prompt capture
+│       │       ├── analyze-patterns.js # Pattern analysis
+│       │       └── suggest-pattern.js  # Session start suggestion
+│       ├── commands/
+│       │   └── patterns.md   # /patterns command
+│       └── skills/
+│           └── create-pattern-skill.md  # Skill creation helper
+├── README.md
+└── README.ko.md
 ```
 
 ## Data & Privacy

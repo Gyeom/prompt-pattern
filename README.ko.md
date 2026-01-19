@@ -21,7 +21,11 @@ Claude Code를 사용하다 보면 비슷한 요청을 반복하게 된다:
 ## 설치
 
 ```bash
-claude plugin add github:Gyeom/prompt-pattern
+# 마켓플레이스 추가
+claude plugin marketplace add Gyeom/prompt-pattern
+
+# 플러그인 설치
+claude plugin install prompt-pattern
 ```
 
 ## 사용법
@@ -122,18 +126,24 @@ Claude: 알겠습니다! 이 패턴은 더 이상 제안하지 않을게요.
 ```
 prompt-pattern/
 ├── .claude-plugin/
-│   └── plugin.json           # 플러그인 메타데이터
-├── hooks/
-│   ├── hooks.json            # 훅 설정
-│   └── scripts/
-│       ├── capture-prompt.js    # 프롬프트 캡처
-│       ├── analyze-patterns.js  # 패턴 분석
-│       └── suggest-pattern.js   # 세션 시작 제안
-├── commands/
-│   └── patterns.md           # /patterns 명령어
-├── skills/
-│   └── create-pattern-skill.md  # Skill 생성 도우미
-└── README.md
+│   └── marketplace.json      # 마켓플레이스 메타데이터
+├── plugins/
+│   └── prompt-pattern/
+│       ├── .claude-plugin/
+│       │   └── plugin.json   # 플러그인 메타데이터
+│       ├── hooks/
+│       │   ├── hooks.json    # 훅 설정
+│       │   └── scripts/
+│       │       ├── config.js           # 설정 로더
+│       │       ├── capture-prompt.js   # 프롬프트 캡처
+│       │       ├── analyze-patterns.js # 패턴 분석
+│       │       └── suggest-pattern.js  # 세션 시작 제안
+│       ├── commands/
+│       │   └── patterns.md   # /patterns 명령어
+│       └── skills/
+│           └── create-pattern-skill.md  # Skill 생성 도우미
+├── README.md
+└── README.ko.md
 ```
 
 ## 데이터 & 프라이버시

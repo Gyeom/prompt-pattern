@@ -15,7 +15,7 @@
         "name": "Gyeom",
         "email": "rlaeorua369@gmail.com"
       },
-      "source": "..",
+      "source": "./plugins/prompt-pattern",
       "category": "productivity"
     }
   ]
