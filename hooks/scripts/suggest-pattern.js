@@ -16,9 +16,12 @@ const PROMPTS_FILE = path.join(DATA_DIR, 'prompts.json');
 const LAST_SUGGEST_FILE = path.join(DATA_DIR, 'last-suggest.json');
 
 // 설정
-const MIN_PROMPTS_BEFORE_SUGGEST = 10;  // 최소 10개 프롬프트 후 제안
+const MIN_PROMPTS_BEFORE_SUGGEST = 5;   // 최소 5개 프롬프트 후 제안
 const SUGGEST_COOLDOWN_HOURS = 24;      // 24시간에 한 번만 제안
 const MIN_PATTERN_COUNT = 3;
+
+// analyze-patterns.js 모듈 사용
+const { analyzePatterns } = require('./analyze-patterns.js');
 
 /**
  * 제안 쿨다운 체크
@@ -51,7 +54,7 @@ function recordSuggestion() {
 }
 
 /**
- * 패턴 분석 (analyze-patterns.js 로직 간소화)
+ * 패턴 분석 (analyze-patterns.js 모듈 사용)
  */
 function getTopPattern() {
   if (!fs.existsSync(PROMPTS_FILE)) {
@@ -59,109 +62,27 @@ function getTopPattern() {
   }
 
   const data = JSON.parse(fs.readFileSync(PROMPTS_FILE, 'utf8'));
-  const dismissed = new Set(data.dismissed || []);
 
   if (data.prompts.length < MIN_PROMPTS_BEFORE_SUGGEST) {
     return null;
   }
 
-  // 최근 7일
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - 7);
+  // analyze-patterns.js의 분석 결과 사용
+  const result = analyzePatterns();
 
-  const recentPrompts = data.prompts.filter(p =>
-    new Date(p.timestamp) >= cutoffDate
-  );
-
-  if (recentPrompts.length < MIN_PATTERN_COUNT) {
+  if (!result.patterns || result.patterns.length === 0) {
     return null;
   }
 
-  // 간단한 패턴 찾기: 토큰 기반 그룹핑
-  const groups = {};
-
-  recentPrompts.forEach(p => {
-    const key = (p.tokens || []).sort().join('|');
-    if (!groups[key]) {
-      groups[key] = [];
-    }
-    groups[key].push(p);
-  });
-
-  // 가장 큰 그룹 찾기
-  let topGroup = null;
-  let maxCount = 0;
-
-  Object.values(groups).forEach(group => {
-    if (group.length > maxCount && group.length >= MIN_PATTERN_COUNT) {
-      // dismissed 체크
-      const patternId = 'pattern_' + Math.abs(hashCode(group[0].prompt)).toString(36);
-      if (!dismissed.has(patternId)) {
-        maxCount = group.length;
-        topGroup = group;
-      }
-    }
-  });
-
-  if (!topGroup) {
-    return null;
-  }
-
-  // 패턴 정보 구성
-  const representative = topGroup.sort((a, b) =>
-    a.prompt.length - b.prompt.length
-  )[0];
-
-  const keywords = extractKeywords(topGroup);
-  const suggestedName = suggestName(keywords);
+  // 가장 빈번한 패턴 반환
+  const top = result.patterns[0];
 
   return {
-    count: topGroup.length,
-    prompt: representative.prompt,
-    suggestedName,
-    keywords
+    count: top.count,
+    prompt: top.representative,
+    suggestedName: top.suggestedName,
+    keywords: top.keywords
   };
-}
-
-function hashCode(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash = hash & hash;
-  }
-  return hash;
-}
-
-function extractKeywords(group) {
-  const counts = {};
-  group.forEach(p => {
-    (p.tokens || []).forEach(t => {
-      counts[t] = (counts[t] || 0) + 1;
-    });
-  });
-
-  return Object.entries(counts)
-    .filter(([_, c]) => c >= group.length * 0.5)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([t]) => t);
-}
-
-function suggestName(keywords) {
-  const mapping = {
-    'commit': 'commit', '커밋': 'commit',
-    'test': 'test', '테스트': 'test',
-    'build': 'build', '빌드': 'build',
-    'deploy': 'deploy', '배포': 'deploy',
-    'lint': 'lint', 'format': 'format',
-    'pr': 'pr', 'push': 'push',
-    'review': 'review', '리뷰': 'review'
-  };
-
-  for (const k of keywords) {
-    if (mapping[k]) return mapping[k];
-  }
-  return keywords[0] || 'quick-action';
 }
 
 /**

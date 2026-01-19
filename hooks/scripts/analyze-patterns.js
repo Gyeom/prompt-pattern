@@ -14,9 +14,9 @@ const os = require('os');
 // 설정
 const DATA_DIR = path.join(os.homedir(), '.prompt-pattern');
 const PROMPTS_FILE = path.join(DATA_DIR, 'prompts.json');
-const SIMILARITY_THRESHOLD = 0.4;  // 40% 이상 유사하면 같은 패턴
-const MIN_PATTERN_COUNT = 3;       // 최소 3번 반복해야 패턴
-const DAYS_TO_ANALYZE = 14;        // 최근 14일 분석
+const SIMILARITY_THRESHOLD = 0.25;  // 25% 이상 유사하면 같은 패턴 (한국어 형태소 고려)
+const MIN_PATTERN_COUNT = 3;        // 최소 3번 반복해야 패턴
+const DAYS_TO_ANALYZE = 14;         // 최근 14일 분석
 
 /**
  * 메인 분석 함수
@@ -141,18 +141,45 @@ function clusterPrompts(prompts) {
 }
 
 /**
- * Jaccard 유사도 계산
+ * 확장된 Jaccard 유사도 계산 (부분 매칭 포함)
+ * 한국어 형태소 변화를 고려하여 토큰이 다른 토큰에 포함되면 매칭으로 처리
  */
 function jaccardSimilarity(tokens1, tokens2) {
   if (tokens1.length === 0 || tokens2.length === 0) return 0;
 
-  const set1 = new Set(tokens1);
-  const set2 = new Set(tokens2);
+  // 부분 매칭 함수: 두 토큰이 서로 포함되거나, 공통 접두사가 2글자 이상이면 매칭
+  function isPartialMatch(t1, t2) {
+    if (t1 === t2) return true;
+    if (t1.includes(t2) || t2.includes(t1)) return true;
+    // 공통 접두사 체크 (한국어 어간 매칭)
+    const minLen = Math.min(t1.length, t2.length);
+    if (minLen >= 2) {
+      let common = 0;
+      for (let i = 0; i < minLen; i++) {
+        if (t1[i] === t2[i]) common++;
+        else break;
+      }
+      if (common >= 2) return true;
+    }
+    return false;
+  }
 
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
+  // 매칭된 토큰 수 계산
+  let matchCount = 0;
+  const used = new Set();
 
-  return intersection.size / union.size;
+  for (const t1 of tokens1) {
+    for (const t2 of tokens2) {
+      if (!used.has(t2) && isPartialMatch(t1, t2)) {
+        matchCount++;
+        used.add(t2);
+        break;
+      }
+    }
+  }
+
+  const union = new Set([...tokens1, ...tokens2]).size;
+  return matchCount / union;
 }
 
 /**
@@ -195,7 +222,7 @@ function extractCommonKeywords(cluster) {
  * Skill 이름 제안
  */
 function suggestSkillName(keywords, representative) {
-  // 키워드 기반 이름 생성
+  // 키워드 기반 이름 생성 (부분 매칭 포함)
   const actionWords = {
     'commit': 'commit',
     '커밋': 'commit',
@@ -220,22 +247,39 @@ function suggestSkillName(keywords, representative) {
     'update': 'update',
     '업데이트': 'update',
     'pr': 'pr',
-    'push': 'push'
+    'push': 'push',
+    '푸시': 'push'
   };
 
+  // 키워드에서 직접 매칭
   for (const keyword of keywords) {
     if (actionWords[keyword]) {
       return actionWords[keyword];
     }
+    // 부분 매칭: 키워드가 액션워드를 포함하는지
+    for (const [action, name] of Object.entries(actionWords)) {
+      if (keyword.includes(action) || action.includes(keyword)) {
+        return name;
+      }
+    }
   }
 
-  // 첫 번째 키워드 사용
+  // 대표 프롬프트에서 직접 찾기
+  const promptLower = representative.toLowerCase();
+  for (const [action, name] of Object.entries(actionWords)) {
+    if (promptLower.includes(action)) {
+      return name;
+    }
+  }
+
+  // 첫 번째 키워드 사용 (한글/영문 유지)
   if (keywords.length > 0) {
-    return keywords[0].replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const cleaned = keywords[0].replace(/[^a-z0-9가-힣]/gi, '').toLowerCase();
+    return cleaned || 'quick-action';
   }
 
-  // 폴백: 랜덤
-  return 'quick-action-' + Date.now().toString(36).slice(-4);
+  // 폴백
+  return 'quick-action';
 }
 
 /**
