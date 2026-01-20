@@ -86,8 +86,8 @@ Claude: 알겠습니다! 이 패턴은 더 이상 제안하지 않을게요.
 
 ### 패턴 분석
 
-- **Jaccard 유사도**: 토큰 기반 유사도 계산
-- 25% 이상 유사하면 같은 패턴으로 그룹화
+- **LLM 의미 분석**: Claude가 프롬프트의 의미를 직접 분석
+- 비슷한 의도/목적을 가진 프롬프트를 그룹화 (하드코딩 매핑 없음)
 - 최소 3회 이상 반복해야 패턴으로 인정
 - 최근 14일 데이터만 분석
 
@@ -103,7 +103,6 @@ Claude: 알겠습니다! 이 패턴은 더 이상 제안하지 않을게요.
 
 ```json
 {
-  "similarityThreshold": 0.25,
   "minPatternCount": 3,
   "daysToAnalyze": 14,
   "suggestCooldownHours": 24,
@@ -114,7 +113,6 @@ Claude: 알겠습니다! 이 패턴은 더 이상 제안하지 않을게요.
 
 | 설정 | 기본값 | 설명 |
 |------|--------|------|
-| `similarityThreshold` | 0.25 | 유사도 임계값 (25%) |
 | `minPatternCount` | 3 | 최소 반복 횟수 |
 | `daysToAnalyze` | 14 | 분석 기간 (일) |
 | `suggestCooldownHours` | 24 | 제안 간격 (시간) |
@@ -136,7 +134,6 @@ prompt-pattern/
 │       │   └── scripts/
 │       │       ├── config.js           # 설정 로더
 │       │       ├── capture-prompt.js   # 프롬프트 캡처
-│       │       ├── analyze-patterns.js # 패턴 분석
 │       │       └── suggest-pattern.js  # 세션 시작 제안
 │       ├── commands/
 │       │   └── patterns.md   # /patterns 명령어

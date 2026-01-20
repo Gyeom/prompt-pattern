@@ -86,8 +86,8 @@ Claude: Got it! I won't suggest this pattern anymore.
 
 ### Pattern Analysis
 
-- **Jaccard Similarity**: Token-based similarity calculation
-- Groups as same pattern if 25%+ similar
+- **LLM Semantic Analysis**: Claude analyzes prompt meanings directly
+- Groups prompts with similar intent/purpose (no hardcoded mappings)
 - Requires minimum 3 repetitions to be recognized as pattern
 - Only analyzes last 14 days of data
 
@@ -103,7 +103,6 @@ Create `~/.prompt-pattern/config.json` to customize:
 
 ```json
 {
-  "similarityThreshold": 0.25,
   "minPatternCount": 3,
   "daysToAnalyze": 14,
   "suggestCooldownHours": 24,
@@ -114,7 +113,6 @@ Create `~/.prompt-pattern/config.json` to customize:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `similarityThreshold` | 0.25 | Similarity threshold (25%) |
 | `minPatternCount` | 3 | Minimum repetitions |
 | `daysToAnalyze` | 14 | Analysis period (days) |
 | `suggestCooldownHours` | 24 | Suggestion interval (hours) |
@@ -136,7 +134,6 @@ prompt-pattern/
 │       │   └── scripts/
 │       │       ├── config.js           # Config loader
 │       │       ├── capture-prompt.js   # Prompt capture
-│       │       ├── analyze-patterns.js # Pattern analysis
 │       │       └── suggest-pattern.js  # Session start suggestion
 │       ├── commands/
 │       │   └── patterns.md   # /patterns command

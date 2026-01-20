@@ -13,7 +13,6 @@ const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
 // Default configuration
 const DEFAULTS = {
-  similarityThreshold: 0.25,      // 25% similarity threshold
   minPatternCount: 3,             // Minimum 3 repetitions
   daysToAnalyze: 14,              // Analyze last 14 days
   suggestCooldownHours: 24,       // Suggest once per 24 hours

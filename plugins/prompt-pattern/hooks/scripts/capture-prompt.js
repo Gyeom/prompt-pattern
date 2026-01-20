@@ -63,15 +63,13 @@ process.stdin.on('end', () => {
     // 데이터 로드
     const data = loadPrompts();
 
-    // 새 프롬프트 추가
+    // 새 프롬프트 추가 (LLM이 직접 분석하므로 토큰화 불필요)
     data.prompts.push({
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
       prompt: prompt.trim(),
       timestamp: new Date().toISOString(),
       sessionId: context.sessionId || 'unknown',
-      project: context.cwd || process.cwd(),
-      // 토큰화된 단어들 (간단한 유사도 계산용)
-      tokens: tokenize(prompt)
+      project: context.cwd || process.cwd()
     });
 
     // 최대 개수 유지 (오래된 것 삭제)
@@ -93,41 +91,3 @@ process.stdin.on('end', () => {
   }
 });
 
-/**
- * 간단한 토큰화 (유사도 계산용)
- */
-function tokenize(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9가-힣\s]/g, ' ')  // 특수문자 제거
-    .split(/\s+/)
-    .filter(t => t.length > 1)  // 1글자 제거
-    .filter(t => !isStopWord(t));  // 불용어 제거
-}
-
-/**
- * 불용어 체크
- */
-function isStopWord(word) {
-  const stopWords = new Set([
-    // 영어
-    'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-    'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare',
-    'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as',
-    'into', 'through', 'during', 'before', 'after', 'above', 'below',
-    'and', 'but', 'or', 'nor', 'so', 'yet', 'both', 'either', 'neither',
-    'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just',
-    'this', 'that', 'these', 'those', 'it', 'its',
-    'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves',
-    'you', 'your', 'yours', 'yourself', 'yourselves',
-    'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
-    'they', 'them', 'their', 'theirs', 'themselves',
-    'what', 'which', 'who', 'whom', 'when', 'where', 'why', 'how',
-    // 한국어
-    '이', '그', '저', '것', '수', '등', '들', '및', '에', '의', '가', '를',
-    '은', '는', '이다', '있다', '하다', '되다', '않다', '없다', '같다',
-    '위해', '대해', '통해', '따라', '관해', '해서', '해줘', '줘', '좀'
-  ]);
-  return stopWords.has(word);
-}

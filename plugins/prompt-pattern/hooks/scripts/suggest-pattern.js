@@ -3,7 +3,7 @@
 /**
  * Prompt Pattern Plugin - Session Start Suggestion
  *
- * SessionStart hook에서 실행되어 패턴 제안을 출력한다.
+ * SessionStart hook에서 실행되어 패턴 분석을 Claude에게 요청한다.
  * stdout으로 출력하면 Claude가 컨텍스트로 받아서 사용자에게 전달한다.
  */
 
@@ -19,10 +19,7 @@ const LAST_SUGGEST_FILE = path.join(DATA_DIR, 'last-suggest.json');
 
 const MIN_PROMPTS_BEFORE_SUGGEST = config.minPromptsBeforeSuggest;
 const SUGGEST_COOLDOWN_HOURS = config.suggestCooldownHours;
-const MIN_PATTERN_COUNT = config.minPatternCount;
-
-// analyze-patterns.js 모듈 사용
-const { analyzePatterns } = require('./analyze-patterns.js');
+const DAYS_TO_ANALYZE = config.daysToAnalyze;
 
 /**
  * 제안 쿨다운 체크
@@ -55,9 +52,9 @@ function recordSuggestion() {
 }
 
 /**
- * 패턴 분석 (analyze-patterns.js 모듈 사용)
+ * 최근 프롬프트 가져오기
  */
-function getTopPattern() {
+function getRecentPrompts() {
   if (!fs.existsSync(PROMPTS_FILE)) {
     return null;
   }
@@ -68,22 +65,20 @@ function getTopPattern() {
     return null;
   }
 
-  // analyze-patterns.js의 분석 결과 사용
-  const result = analyzePatterns();
+  // 최근 N일 프롬프트만 필터링
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - DAYS_TO_ANALYZE);
 
-  if (!result.patterns || result.patterns.length === 0) {
+  const recentPrompts = data.prompts.filter(p => {
+    const promptDate = new Date(p.timestamp);
+    return promptDate >= cutoffDate;
+  });
+
+  if (recentPrompts.length < MIN_PROMPTS_BEFORE_SUGGEST) {
     return null;
   }
 
-  // 가장 빈번한 패턴 반환
-  const top = result.patterns[0];
-
-  return {
-    count: top.count,
-    prompt: top.representative,
-    suggestedName: top.suggestedName,
-    keywords: top.keywords
-  };
+  return recentPrompts;
 }
 
 /**
@@ -96,29 +91,37 @@ function main() {
       process.exit(0);
     }
 
-    // 패턴 분석
-    const pattern = getTopPattern();
+    // 최근 프롬프트 가져오기
+    const prompts = getRecentPrompts();
 
-    if (!pattern) {
+    if (!prompts) {
       process.exit(0);
     }
 
     // 제안 시간 기록
     recordSuggestion();
 
+    // 최근 20개 프롬프트만 Claude에게 전달 (컨텍스트 절약)
+    const recentSample = prompts
+      .slice(-20)
+      .map(p => p.prompt)
+      .join('\n- ');
+
     // stdout으로 Claude에게 컨텍스트 전달
-    // (UserPromptSubmit와 SessionStart 훅에서 stdout은 Claude 컨텍스트로 주입됨)
     const suggestion = `
-<pattern-detective-suggestion>
-[Prompt Pattern] 반복 패턴을 발견했습니다.
+<pattern-suggestion>
+[Prompt Pattern] 최근 ${prompts.length}개의 프롬프트를 분석해주세요.
 
-"${pattern.prompt.substring(0, 60)}${pattern.prompt.length > 60 ? '...' : ''}"
-와 비슷한 요청을 최근 ${pattern.count}회 하셨습니다.
+최근 프롬프트 샘플:
+- ${recentSample}
 
-/${pattern.suggestedName} 명령어로 만들면 더 빠르게 사용할 수 있어요.
+위 프롬프트들 중 반복되는 패턴이 있다면:
+1. 한 문장으로 간단히 알려주세요 (예: "커밋 관련 요청이 자주 보이네요!")
+2. /patterns 명령어로 자세히 볼 수 있다고 안내하세요
+3. 강요하지 말고 자연스럽게 언급만 하세요
 
-사용자에게 간단히 알려주세요 (한 문장). 강요하지 말고, /patterns 명령어로 자세히 볼 수 있다고 안내하세요.
-</pattern-detective-suggestion>
+반복 패턴이 없다면 아무 말도 하지 마세요.
+</pattern-suggestion>
 `.trim();
 
     console.log(suggestion);
